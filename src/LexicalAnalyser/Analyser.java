@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 public class Analyser {
-		
+	
+	boolean exp;
 	String inputLine;
 	String token;
 	String tokenValue;
@@ -55,131 +56,181 @@ public class Analyser {
 			
 	}
 		
-	void mainAnalyser() throws IOException{
-		int i;
-		lineNo = 0;
-		while((inputLine = bReader.readLine()) != null){
-				//Call each tokenizer function on the inptLine
-				//split string across tokens
-			renewLists();
-			lineNo++;
+	void mainAnalyzer() throws IOException{
+		int i = 0;
+		
+		while ((inputLine = bReader.readLine()) != null) {
 			i = 0;
 			tokenValue = "";
-			state = 0;
+			exp = false;
 			while (i < inputLine.length()) {
-					/*To Do
-					 1. Number, Float, Exponential
-					 2. Directives
-					 3. Headers.
-					 */
-					
-					
-				String currentChar = ""+inputLine.charAt(i);
 				switch (state) {
-				
-					case 0:						
-						if(Character.isLetter(inputLine.charAt(i))){
-							state = 1;
-							tokenValue = tokenValue + currentChar;
-							//System.out.println("true");
-						}						
-						else if(globallistOfOperators.contains(currentChar)){
-							state = 4;
-							tokenValue = "" + currentChar;
-						}
-						else if(listOfParentheses.contains(currentChar)){
-							addToken("Parentheses", currentChar);
-						}
-						else if(Character.isDigit(inputLine.charAt(i))){
-							state = 3;
-							tokenValue = tokenValue + currentChar;	
-						}
+				case 0:
+					if(checkIfDelimiter(i)){
+						tokenValue = "";
+						state = 0;
 						break;
-						// Case 1 Identifies keywords and non-Numerc-identifier
-					case 1:
-						if(Character.isLetter(inputLine.charAt(i))){
-							state = 1;
-							tokenValue = tokenValue + inputLine.charAt(i);
-						}
-						else if(checkIfDelimiter(i) ){
-							if(listOfKeywords.contains(tokenValue)){
-								addToken("Keywords",tokenValue);								
-							}
-							else {
-								addToken("Identifier",tokenValue);
-							}
-						}
-						else if(listOfParentheses.contains(currentChar)){
-							if(listOfKeywords.contains(tokenValue)){
-								addToken("Keywords",tokenValue);
-								
-							}
-							else {
-								addToken("Identifier",tokenValue);
-							}
-							parentheses.add(currentChar);
-						}
-						else if(globallistOfOperators.contains(currentChar)){
-							addToken("Identifier",tokenValue);
-							tokenValue = ""+inputLine.charAt(i);
-							state=4;							
-						}
+					}											
+					else if(Character.isLetter(inputLine.charAt(i)))
+						state = 1;
+					else if(inputLine.charAt(i) == '_')
+						state = 2;
+					else if (inputLine.charAt(i) == '-') {
+						state = 3;
+					}
+					
+					else if (Character.isDigit(inputLine.charAt(i))) {
+						state = 6;
+					}
+					tokenValue = tokenValue + inputLine.charAt(i);
+					break;
+				case 1:
+					if(Character.isLetter(inputLine.charAt(i)))
+						state = 1;
+					else if(Character.isDigit(inputLine.charAt(i)) || inputLine.charAt(i) == '_')
+						state = 2;
+					
+					else {						
+						if(listOfKeywords.contains(tokenValue))
+							addToken("Keyword", tokenValue);
 						else {
-							state = 2;
-							tokenValue = tokenValue + inputLine.charAt(i);
+							addToken("Identifier", tokenValue);
 						}
-						break;
-					//Case 2 identifies Identifiers with nos and special characters.	
-					case 2:
-						if(Character.isJavaIdentifierPart(inputLine.charAt(i))){
-							state = 2;
-							tokenValue = tokenValue + inputLine.charAt(i);
-						}
-						else if(checkIfDelimiter(i)){
-							addToken("Identifier",tokenValue);
-						}
-						else if(listOfParentheses.contains(currentChar)){
-							if(listOfKeywords.contains(tokenValue)){
-								addToken("Keywords",tokenValue);							
-							}
-							else {
-								addToken("Identifier",tokenValue);
-							}
-							parentheses.add(currentChar);
-						}
-						else if(globallistOfOperators.contains(currentChar)){
-							addToken("Identifier",tokenValue);
-							tokenValue = ""+inputLine.charAt(i);
-							state=4;							
-						}
-						
-						break;
-					case 3:
-						if(Character.isDigit(inputLine.charAt(i)) || inputLine.charAt(i) == '.'){
-							state = 3;
-							tokenValue = tokenValue + inputLine.charAt(i);
-						
-						}
-						
-						if(checkIfDelimiter(i))
-							addToken("Number", tokenValue);
-						break;
-					//Case 4 identifies single char & double char Operators
-					case 4:
-						if(!checkIfDelimiter(i)){
-							tokenValue = tokenValue + inputLine.charAt(i);
-							//System.out.println("Two char operator : "+tokenValue);
-						}
-						
-						addToken("Operator", tokenValue);
-					default:
+						//tokenValue = tokenValue + inputLine.charAt(i);						
+						i--;
+						//state = 0;
 						break;
 					}
-					i++;
+					tokenValue = tokenValue + inputLine.charAt(i);
+					break;
+					
+				case 2:
+					if(Character.isLetter(inputLine.charAt(i)) || Character.isDigit(inputLine.charAt(i))){
+						state = 2;
+					}
+					
+					else {
+						addToken("Identifier", tokenValue);
+						i--;
+						break;
+					}
+					tokenValue = tokenValue + inputLine.charAt(i);
+					break;
+				case 3:
+					//This is the minus buffered state. It decides which dfa to call(number/operator)
+					//since '-' is a part of both dfas
+					if(Character.isDigit(inputLine.charAt(i))){
+						state = 4;
+						tokenValue = tokenValue + inputLine.charAt(i);
+					}
+					
+					else if(globallistOfOperators.contains(inputLine.charAt(i))){
+						
+					}
+					
+					break;					
+				case 4:
+					if(Character.isDigit(inputLine.charAt(i)))
+						state = 4;
+					else if(inputLine.charAt(i) == '.')
+						state = 7;
+					else if (inputLine.charAt(i) == 'E') {
+						exp = true;
+						state = 5;
+					}
+					else {
+						if(exp)
+							addToken("Exponential", tokenValue);
+						else {
+							addToken("Integer", tokenValue);
+						}
+						
+						i--;
+						break;
+					}
+					tokenValue = tokenValue + inputLine.charAt(i);
+					break;
+					
+				case 5:
+					if(inputLine.charAt(i) == '-')
+						state = 9;
+					else if (Character.isDigit(inputLine.charAt(i))) {
+						state = 6;
+					}
+					else {
+						state = 99;
+					}
+					tokenValue = tokenValue + inputLine.charAt(i);
+					break;
+					
+				case 6:
+					if(Character.isDigit(inputLine.charAt(i)))
+						state = 6;
+					else if (inputLine.charAt(i) == '.') {
+						state = 7;
+					}
+					else if (inputLine.charAt(i) == 'E') {
+						exp = true;
+						state = 5;
+					}
+					else {
+						if(exp)
+							addToken("Exponential", tokenValue);
+						else {
+							addToken("Integer", tokenValue);
+						}
+						
+						i--;
+						break;
+					}
+					tokenValue = tokenValue + inputLine.charAt(i);
+					break;
+				case 7:
+					if(Character.isDigit(inputLine.charAt(i)))
+						state = 8;
+					else {
+						state = 99;
+					}
+					tokenValue = tokenValue + inputLine.charAt(i);
+					break;
+				
+				case 8:
+					if(Character.isDigit(inputLine.charAt(i)))
+						state = 8;
+					else if (inputLine.charAt(i) == 'E') {
+						state = 5;
+						exp = true;
+					}
+					else {
+						if(exp)
+							addToken("Exponential", tokenValue);
+						else {
+							addToken("Float", tokenValue);
+						}
+						
+						i--;
+						break;
+					}
+					tokenValue = tokenValue + inputLine.charAt(i);
+					break;
+					
+				case 9:
+					if(Character.isDigit(inputLine.charAt(i)))
+						state = 4;
+					else {
+						state = 99;
+					}
+					tokenValue = tokenValue + inputLine.charAt(i);
+					break;
+				default:
+					addToken("Unidentified token: ", tokenValue);
+					break;
 				}
-				printToken();
+				i++;				
 			}
+			System.out.println();
 		}
+	}
 		
 		boolean checkIfDelimiter(int i){
 			if(inputLine.charAt(i) == ' ' || inputLine.charAt(i) == '\t' || inputLine.charAt(i) == '\n' || inputLine.charAt(i) == ';'
@@ -205,85 +256,11 @@ public class Analyser {
 		}
 		
 		void addToken(String token, String tokenValue){
-			/*switch (token) {
-			case "Keywords":
-				keywords.add(tokenValue);
-				break;
-			case "Identifier":
-				if(!indentifiers.contains(tokenValue)){
-					indentifiers.add(tokenValue);
-				}				
-				break;
-			case "Number":
-				numbers.add(tokenValue);
-				break;
-			case "Operator":
-				
-				if(listOfArithmeticOperators.contains(tokenValue)){
-					arithmeticOperators.add(tokenValue);
-				}
-				
-				else if(listOfAssignmentOperators.contains(tokenValue)){
-					assignmentOperators.add(tokenValue);
-				}
-				
-				else if(listOfBitwiseOperators.contains(tokenValue)){
-					bitwiseOperators.add(tokenValue);
-				}
-				
-				else if(listOfLogicalOperators.contains(tokenValue)){
-					logicalOperators.add(tokenValue);
-				}
-				
-				else if(listOfRelationalOperators.contains(tokenValue)){
-					relationalOperators.add(tokenValue);
-				}
-				operators.add(tokenValue);
-				break;
-			case "Parentheses":
-				parentheses.add(tokenValue);
-			default:
-				break;
-			}
-			*/
+			
 			System.out.println(token + ": " + tokenValue);
 			this.tokenValue = "";
 			this.state = 0;
-		}
-		
-		void printToken(){
-			System.out.println();
-			//System.out.println("----------------Line number "+lineNo+" ----------------");
-			/*
-			if(!keywords.isEmpty()){
-				System.out.println("Keywords: " + keywords);
-			}
-			if(!indentifiers.isEmpty()){
-				System.out.println("Identifiers: " + indentifiers);
-			}
-			if(!numbers.isEmpty()){
-				System.out.println("Numbers: " + numbers);
-			}
-			if(!parentheses.isEmpty()){
-				System.out.println("Parentheses: "+parentheses);
-			}					
-			if (!arithmeticOperators.isEmpty()) {
-				System.out.println("Arithmetic Operators : "+arithmeticOperators);
-			}
-			if (!assignmentOperators.isEmpty()) {
-				System.out.println("Assignment Operators : "+assignmentOperators);
-			}
-			if (!bitwiseOperators.isEmpty()) {
-				System.out.println("Bitwise Operators : "+bitwiseOperators);
-			}
-			if (!logicalOperators.isEmpty()) {
-				System.out.println("Logical Operators : "+logicalOperators);
-			}
-			if (!relationalOperators.isEmpty()) {
-				System.out.println("Relational Operators : "+relationalOperators);
-			}*/
-		//	System.out.println(lineNo + ": " + "keywords: " + keywords);
-			
+			this.exp = false;
 		}
 		
 		void InitializeKeywords(){
@@ -406,7 +383,7 @@ public class Analyser {
 		public static void main(String[] args) throws IOException {
 			Analyser analyser = new Analyser();
 			analyser.inputFunction();
-			analyser.mainAnalyser();
+			analyser.mainAnalyzer();
 		}
 }
 
