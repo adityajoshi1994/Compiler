@@ -1,3 +1,7 @@
-int aditya10,b,c;
-a=-99,-9.0,-9.78E-98.76;
-int[] a;
+//C hello world example 
+int main()
+{
+  printf("Hello world\n"); /*this is a
+  multilined comment */
+  return 0;
+}

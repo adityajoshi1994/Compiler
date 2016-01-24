@@ -23,6 +23,9 @@ public class Analyser {
 	ArrayList<String> listOfBitwiseOperators = new ArrayList<>();
 	ArrayList<String> listOfAssignmentOperators = new ArrayList<>();
 	ArrayList<String> listOfParentheses = new ArrayList<>();
+	
+	ArrayList<String> listOfOpeningBrackets = new ArrayList<>();
+	ArrayList<String> listOfClosingBrackets = new ArrayList<>();
 	//-----------------------------------------------------
 	ArrayList<String> arithmeticOperators = new ArrayList<>();
 	ArrayList<String> relationalOperators = new ArrayList<>();
@@ -75,12 +78,32 @@ public class Analyser {
 						state = 1;
 					else if(inputLine.charAt(i) == '_')
 						state = 2;
-					else if (inputLine.charAt(i) == '-') {
+					/*else if (inputLine.charAt(i) == '-') {
 						state = 3;
-					}
+					}*/
 					
 					else if (Character.isDigit(inputLine.charAt(i))) {
 						state = 6;
+					}
+					
+					else if (inputLine.charAt(i) == '/') {
+						state = 11;
+					}
+					else if (globallistOfOperators.contains(Character.toString(inputLine.charAt(i)))) {
+						state = 10;
+						
+					}
+					
+					else if (listOfOpeningBrackets.contains(Character.toString(inputLine.charAt(i)))) {
+						tokenValue = tokenValue + inputLine.charAt(i);
+						addToken("Opening Bracket", tokenValue);
+						break;
+					}
+					
+					else if (listOfClosingBrackets.contains(Character.toString(inputLine.charAt(i)))) {
+						tokenValue = tokenValue + inputLine.charAt(i);
+						addToken("Closing Bracket", tokenValue);
+						break;
 					}
 					tokenValue = tokenValue + inputLine.charAt(i);
 					break;
@@ -116,7 +139,7 @@ public class Analyser {
 					}
 					tokenValue = tokenValue + inputLine.charAt(i);
 					break;
-				case 3:
+				/*case 3:
 					//This is the minus buffered state. It decides which dfa to call(number/operator)
 					//since '-' is a part of both dfas
 					if(Character.isDigit(inputLine.charAt(i))){
@@ -128,15 +151,16 @@ public class Analyser {
 						
 					}
 					
-					break;					
+					break;*/					
 				case 4:
 					if(Character.isDigit(inputLine.charAt(i)))
 						state = 4;
 					else if(inputLine.charAt(i) == '.')
 						state = 7;
 					else if (inputLine.charAt(i) == 'E') {
-						exp = true;
-						state = 5;
+						addToken("Number", tokenValue);
+						addToken("Exponential", "E");
+						break;
 					}
 					else {
 						if(exp)
@@ -170,18 +194,15 @@ public class Analyser {
 						state = 7;
 					}
 					else if (inputLine.charAt(i) == 'E') {
-						exp = true;
-						state = 5;
+						addToken("Integer", tokenValue);
+						addToken("Exponential", "E");
+						break;
 					}
 					else {
-						if(exp)
-							addToken("Exponential", tokenValue);
-						else {
-							addToken("Integer", tokenValue);
-						}
 						
-						i--;
-						break;
+							addToken("Integer", tokenValue);
+							i--;
+							break;
 					}
 					tokenValue = tokenValue + inputLine.charAt(i);
 					break;
@@ -198,18 +219,15 @@ public class Analyser {
 					if(Character.isDigit(inputLine.charAt(i)))
 						state = 8;
 					else if (inputLine.charAt(i) == 'E') {
-						state = 5;
-						exp = true;
+						addToken("Float", tokenValue);
+						addToken("Exponential", "E");
+						break;
 					}
 					else {
-						if(exp)
-							addToken("Exponential", tokenValue);
-						else {
-							addToken("Float", tokenValue);
-						}
 						
-						i--;
-						break;
+							addToken("Float", tokenValue);						
+							i--;
+							break;
 					}
 					tokenValue = tokenValue + inputLine.charAt(i);
 					break;
@@ -221,6 +239,101 @@ public class Analyser {
 						state = 99;
 					}
 					tokenValue = tokenValue + inputLine.charAt(i);
+					break;
+					
+				case 10:
+					if(globallistOfOperators.contains(Character.toString(inputLine.charAt(i)))){
+						tokenValue = tokenValue + inputLine.charAt(i);
+						
+						
+					}
+					else {
+						i--;
+					}
+					
+					if(listOfArithmeticOperators.contains(tokenValue)){
+						addToken("Arithmetic Operator", tokenValue);
+					}
+					
+					else if(listOfAssignmentOperators.contains(tokenValue)){
+						addToken("Assignment Operator", tokenValue);
+					}
+					
+					else if(listOfBitwiseOperators.contains(tokenValue)){
+						addToken("Bitwise Operator", tokenValue);
+					}
+					
+					else if(listOfLogicalOperators.contains(tokenValue)){
+						addToken("Logical Operator", tokenValue);
+					}
+					
+					else if(listOfRelationalOperators.contains(tokenValue)){
+						addToken("Relational Operator", tokenValue);
+					}
+					else {
+						addToken("Unknown Operator", tokenValue);
+					}
+					
+					break;
+					
+				case 11:
+					if(inputLine.charAt(i) == '*'){
+						state = 12;
+					}
+					
+					else if (inputLine.charAt(i) == '/') {
+						state = 13;
+					}
+					
+					else {
+						addToken("Arithmetic Operator", tokenValue);
+					}
+					break;
+				case 12:
+					if(inputLine.charAt(i) == '*'){
+						/*tokenValue = tokenValue + inputLine.charAt(i);
+						if(tokenValue.equals("/*")){
+							System.out.println("Multi line comment started!!");
+							disableAddToken = true;
+						}else if (tokenValue.equals("//")) {
+							while(i != inputLine.length()){
+								i++;
+							}*/
+						state = 14;
+							
+						}
+					else {
+						state = 12;
+					}
+						//else if(tokenValue.equals("*/")){
+							/*disableAddToken = false;
+							System.out.println("Multi line comment ended!!");
+						}
+						state = 0;
+					}else{
+						addToken("Operator", tokenValue);
+					}*/
+					break;
+					
+				case 13:
+					//System.out.println(inputLine.charAt(i));
+					if(i == inputLine.length() - 1){
+
+						state = 0;
+					}
+						
+					else {
+						state = 13;
+					}
+					break;
+					
+				case 14:
+					if(inputLine.charAt(i) == '/')
+						state = 0;
+					else {
+						state = 12;
+					}
+						
 					break;
 				default:
 					addToken("Unidentified token: ", tokenValue);
@@ -301,6 +414,10 @@ public class Analyser {
 			listOfArithmeticOperators.add("%");
 			listOfArithmeticOperators.add("++");
 			listOfArithmeticOperators.add("--");
+			listOfArithmeticOperators.add("-=");
+			listOfArithmeticOperators.add("+=");
+			listOfArithmeticOperators.add("*=");
+			listOfArithmeticOperators.add("/=");
 			
 		}
 		
@@ -362,12 +479,12 @@ public class Analyser {
 		}
 		
 		void InitParentheses(){
-			listOfParentheses.add("(");
-			listOfParentheses.add(")");
-			listOfParentheses.add("{");
-			listOfParentheses.add("}");
-			listOfParentheses.add("[");
-			listOfParentheses.add("]");
+			listOfOpeningBrackets.add("(");
+			listOfClosingBrackets.add(")");
+			listOfOpeningBrackets.add("{");
+			listOfClosingBrackets.add("}");
+			listOfOpeningBrackets.add("[");
+			listOfClosingBrackets.add("]");
 		}
 		
 		String removeMultipleWhitespaces(String inputlineWithSpaces){
