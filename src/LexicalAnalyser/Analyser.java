@@ -26,6 +26,8 @@ public class Analyser {
 	
 	ArrayList<String> listOfOpeningBrackets = new ArrayList<>();
 	ArrayList<String> listOfClosingBrackets = new ArrayList<>();
+	
+	ArrayList<String> listOfPreprocessorDirectives = new ArrayList<>();
 	//-----------------------------------------------------
 	ArrayList<String> arithmeticOperators = new ArrayList<>();
 	ArrayList<String> relationalOperators = new ArrayList<>();
@@ -43,6 +45,7 @@ public class Analyser {
 		InitlistOfLogicalOperators();
 		InitRelationalOperators();
 		InitParentheses();
+		InitPreprecessorDirectives();
 	}
 	
 	void inputFunction(){
@@ -63,6 +66,7 @@ public class Analyser {
 		int i = 0;
 		
 		while ((inputLine = bReader.readLine()) != null) {
+			removeMultipleWhitespaces(inputLine);
 			i = 0;
 			tokenValue = "";
 			exp = false;
@@ -105,11 +109,19 @@ public class Analyser {
 						addToken("Closing Bracket", tokenValue);
 						break;
 					}
+					
+					else if (inputLine.charAt(i) == '#') {
+						state = 15;
+						break;
+					}
 					tokenValue = tokenValue + inputLine.charAt(i);
 					break;
 				case 1:
 					if(Character.isLetter(inputLine.charAt(i)))
 						state = 1;
+					else if (inputLine.charAt(i) == '.') {
+						state = 16;
+					}
 					else if(Character.isDigit(inputLine.charAt(i)) || inputLine.charAt(i) == '_')
 						state = 2;
 					
@@ -335,6 +347,28 @@ public class Analyser {
 					}
 						
 					break;
+				case 15:
+					if(checkIfDelimiter(i)){
+						//System.out.println(tokenValue);
+						if(listOfPreprocessorDirectives.contains(tokenValue)){
+							addToken("Preprocessor Directive", tokenValue);
+						}
+					}
+					else {
+						tokenValue = tokenValue + inputLine.charAt(i);
+					}
+					
+					break;
+					
+				case 16:
+					if(inputLine.charAt(i) == 'h'){
+						tokenValue = tokenValue + inputLine.charAt(i);
+						addToken("Header File", tokenValue);
+					}
+					else {
+						state = 99;
+					}
+					break;
 				default:
 					addToken("Unidentified token: ", tokenValue);
 					break;
@@ -485,6 +519,21 @@ public class Analyser {
 			listOfClosingBrackets.add("}");
 			listOfOpeningBrackets.add("[");
 			listOfClosingBrackets.add("]");
+		}
+		
+		void InitPreprecessorDirectives(){
+			listOfPreprocessorDirectives.add("include");
+			listOfPreprocessorDirectives.add("define");
+			listOfPreprocessorDirectives.add("undef");
+			listOfPreprocessorDirectives.add("ifdef");
+			listOfPreprocessorDirectives.add("ifndef");
+			listOfPreprocessorDirectives.add("if");
+			listOfPreprocessorDirectives.add("else");
+			listOfPreprocessorDirectives.add("elif");
+			listOfPreprocessorDirectives.add("endif");
+			listOfPreprocessorDirectives.add("error");
+			listOfPreprocessorDirectives.add("pragma");
+			
 		}
 		
 		String removeMultipleWhitespaces(String inputlineWithSpaces){

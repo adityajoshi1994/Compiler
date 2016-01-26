@@ -1,5 +1,10 @@
 //C hello world example 
-int main()
+#include <stdio.h> 
+int      main()
+
+
+
+
 {
   printf("Hello world\n"); /*this is a
   multilined comment */
