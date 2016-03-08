@@ -1,12 +1,4 @@
-//C hello world example 
-#include <stdio.h> 
-int      main()
-
-
-
-
+if(a < b)
 {
-  printf("Hello world\n"); /*this is a
-  multilined comment */
-  return 0;
+	a = b + c;
 }

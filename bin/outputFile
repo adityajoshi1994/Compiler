@@ -1,0 +1,15 @@
+Keyword:if
+Opening Bracket:(
+Identifier:a
+Relational Operator:<
+Identifier:b
+Closing Bracket:)
+Opening Bracket:{
+Identifier:a
+Assignment Operator:=
+Identifier:b
+Arithmetic Operator:+
+Identifier:c
+;
+Closing Bracket:}
+$

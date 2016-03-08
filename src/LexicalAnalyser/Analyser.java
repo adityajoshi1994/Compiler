@@ -1,7 +1,9 @@
 package LexicalAnalyser;
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
@@ -15,6 +17,7 @@ public class Analyser {
 	int state,lineNo;
 	ArrayList<String> keywords,indentifiers,operators,symbols,numbers;
 	BufferedReader bReader;
+	PrintWriter writer;
 	ArrayList<String> listOfKeywords = new ArrayList<>();
 	ArrayList<String> globallistOfOperators = new ArrayList<>();
 	ArrayList<String> listOfArithmeticOperators = new ArrayList<>();
@@ -52,7 +55,7 @@ public class Analyser {
 			
 		try {
 			bReader = new BufferedReader(new FileReader("E:\\D drive desktop\\vit\\New folder\\Compiler\\src\\inputFile"));
-				
+			
 		} catch (IOException e) {
 				// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -60,6 +63,16 @@ public class Analyser {
 			}
 			
 			
+	}
+	
+	void openOutputFile(){
+		try {
+			writer = new PrintWriter("E:\\D drive desktop\\vit\\New folder\\Compiler\\src\\outputFile");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.out.println("Output file not created");
+		}
 	}
 		
 	void mainAnalyzer() throws IOException{
@@ -82,9 +95,6 @@ public class Analyser {
 						state = 1;
 					else if(inputLine.charAt(i) == '_')
 						state = 2;
-					/*else if (inputLine.charAt(i) == '-') {
-						state = 3;
-					}*/
 					
 					else if (Character.isDigit(inputLine.charAt(i))) {
 						state = 6;
@@ -112,7 +122,7 @@ public class Analyser {
 					
 					else if (inputLine.charAt(i) == '#') {
 						state = 15;
-						break;
+						//break;
 					}
 					tokenValue = tokenValue + inputLine.charAt(i);
 					break;
@@ -151,19 +161,7 @@ public class Analyser {
 					}
 					tokenValue = tokenValue + inputLine.charAt(i);
 					break;
-				/*case 3:
-					//This is the minus buffered state. It decides which dfa to call(number/operator)
-					//since '-' is a part of both dfas
-					if(Character.isDigit(inputLine.charAt(i))){
-						state = 4;
-						tokenValue = tokenValue + inputLine.charAt(i);
-					}
 					
-					else if(globallistOfOperators.contains(inputLine.charAt(i))){
-						
-					}
-					
-					break;*/					
 				case 4:
 					if(Character.isDigit(inputLine.charAt(i)))
 						state = 4;
@@ -303,32 +301,17 @@ public class Analyser {
 					break;
 				case 12:
 					if(inputLine.charAt(i) == '*'){
-						/*tokenValue = tokenValue + inputLine.charAt(i);
-						if(tokenValue.equals("/*")){
-							System.out.println("Multi line comment started!!");
-							disableAddToken = true;
-						}else if (tokenValue.equals("//")) {
-							while(i != inputLine.length()){
-								i++;
-							}*/
 						state = 14;
 							
 						}
 					else {
 						state = 12;
 					}
-						//else if(tokenValue.equals("*/")){
-							/*disableAddToken = false;
-							System.out.println("Multi line comment ended!!");
-						}
-						state = 0;
-					}else{
-						addToken("Operator", tokenValue);
-					}*/
+						
 					break;
 					
 				case 13:
-					//System.out.println(inputLine.charAt(i));
+					
 					if(i == inputLine.length() - 1){
 
 						state = 0;
@@ -375,7 +358,7 @@ public class Analyser {
 				}
 				i++;				
 			}
-			System.out.println();
+			//System.out.println();
 		}
 	}
 		
@@ -404,7 +387,10 @@ public class Analyser {
 		
 		void addToken(String token, String tokenValue){
 			
-			System.out.println(token + ": " + tokenValue);
+			System.out.println(token + ":" + tokenValue);
+			String string = token + ":" + tokenValue;
+			writer.write(string);
+			writer.write("\n");
 			this.tokenValue = "";
 			this.state = 0;
 			this.exp = false;
@@ -522,17 +508,17 @@ public class Analyser {
 		}
 		
 		void InitPreprecessorDirectives(){
-			listOfPreprocessorDirectives.add("include");
-			listOfPreprocessorDirectives.add("define");
-			listOfPreprocessorDirectives.add("undef");
-			listOfPreprocessorDirectives.add("ifdef");
-			listOfPreprocessorDirectives.add("ifndef");
-			listOfPreprocessorDirectives.add("if");
-			listOfPreprocessorDirectives.add("else");
-			listOfPreprocessorDirectives.add("elif");
-			listOfPreprocessorDirectives.add("endif");
-			listOfPreprocessorDirectives.add("error");
-			listOfPreprocessorDirectives.add("pragma");
+			listOfPreprocessorDirectives.add("#include");
+			listOfPreprocessorDirectives.add("#define");
+			listOfPreprocessorDirectives.add("#undef");
+			listOfPreprocessorDirectives.add("#ifdef");
+			listOfPreprocessorDirectives.add("#ifndef");
+			listOfPreprocessorDirectives.add("#if");
+			listOfPreprocessorDirectives.add("#else");
+			listOfPreprocessorDirectives.add("#elif");
+			listOfPreprocessorDirectives.add("#endif");
+			listOfPreprocessorDirectives.add("#error");
+			listOfPreprocessorDirectives.add("#pragma");
 			
 		}
 		
@@ -549,7 +535,10 @@ public class Analyser {
 		public static void main(String[] args) throws IOException {
 			Analyser analyser = new Analyser();
 			analyser.inputFunction();
+			analyser.openOutputFile();
 			analyser.mainAnalyzer();
+			analyser.writer.close();
+			analyser.bReader.close();
 		}
 }
 
