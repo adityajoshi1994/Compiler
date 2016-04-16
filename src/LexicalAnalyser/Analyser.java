@@ -7,13 +7,17 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+import Parser.GeneralizeedParser;
+
 public class Analyser {
 	
 	boolean exp;
 	String inputLine;
 	String token;
 	String tokenValue;
+	GeneralizeedParser gp;
 	ArrayList<String> tokeStrings;
+	int c;
 	int state,lineNo;
 	ArrayList<String> keywords,indentifiers,operators,symbols,numbers;
 	BufferedReader bReader;
@@ -39,7 +43,7 @@ public class Analyser {
 	ArrayList<String> assignmentOperators = new ArrayList<>();
 	ArrayList<String> parentheses = new ArrayList<>();
 	
-	public Analyser(){
+	public Analyser() throws IOException{
 		InitializeKeywords();
 		InitGlobalListOfOperators();
 		InitlistOfAssignmentOperators();
@@ -49,7 +53,9 @@ public class Analyser {
 		InitRelationalOperators();
 		InitParentheses();
 		InitPreprecessorDirectives();
+		gp = new GeneralizeedParser();
 	}
+	
 	
 	void inputFunction(){
 			
@@ -360,12 +366,20 @@ public class Analyser {
 			}
 			//System.out.println();
 		}
+		addToken("End", "$");
+		while (c != 0) {
+			c = gp.updateStack();
+		}
 	}
 		
 		boolean checkIfDelimiter(int i){
 			if(inputLine.charAt(i) == ' ' || inputLine.charAt(i) == '\t' || inputLine.charAt(i) == '\n' || inputLine.charAt(i) == ';'
-					|| inputLine.charAt(i) == ',')
+					|| inputLine.charAt(i) == ','){
+				if(inputLine.charAt(i) == ';')
+					addToken("delimiter", ";");
 				return true;
+			}
+				
 			else {
 				return false;
 			}
@@ -387,10 +401,20 @@ public class Analyser {
 		
 		void addToken(String token, String tokenValue){
 			
-			System.out.println(token + ":" + tokenValue);
+			//System.out.println(token + ":" + tokenValue);
 			String string = token + ":" + tokenValue;
 			writer.write(string);
 			writer.write("\n");
+			if(tokenValue.equals(";"))
+				gp.LexCommunicator.add(tokenValue);
+			else if (tokenValue.equals("$")) {
+				gp.LexCommunicator.add("$");
+			}
+			else {
+				gp.LexCommunicator.add(token + ":" + tokenValue);
+			}
+			if(c != 1)
+				c = gp.updateStack();
 			this.tokenValue = "";
 			this.state = 0;
 			this.exp = false;

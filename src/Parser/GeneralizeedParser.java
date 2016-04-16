@@ -6,6 +6,9 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.poi.hssf.util.CellReference;
 import org.apache.poi.ss.usermodel.Cell;
@@ -20,9 +23,18 @@ public class GeneralizeedParser {
 	FileInputStream file;
 	XSSFWorkbook workbook;
 	XSSFSheet sheet;
+	Map<String, Float> symbolTable = Collections.synchronizedMap(new HashMap<String, Float>());
+	public ArrayList<String> LexCommunicator = new ArrayList<String>();
+	
+	public GeneralizeedParser() throws IOException {
+		// TODO Auto-generated constructor stub
+		stack.add("0");
+		this.accessParseTableFile();
+	}
+	
 	void accessParseTableFile() throws IOException{
 		//hard code the parsing table for "if"
-		file = new FileInputStream(new File("E:\\D drive desktop\\vit\\New folder\\Compiler\\src\\Parse Table.xlsx"));
+		file = new FileInputStream(new File("E:\\D drive desktop\\vit\\New folder\\Compiler\\src\\ParseTable2.xlsx"));
 		workbook = new XSSFWorkbook(file);
 
         //Get first/desired sheet from the workbook
@@ -40,18 +52,25 @@ public class GeneralizeedParser {
 		Cell cell = row.getCell(cellReference.getCol());
 		Double double1;
 		Integer i;
-		switch (cell.getCellType()) 
-        {
-            case Cell.CELL_TYPE_NUMERIC:
-                double1 = cell.getNumericCellValue();
-                i = double1.intValue();
-                return i.toString();
-            case Cell.CELL_TYPE_STRING:
-                return cell.getStringCellValue();
-            default:
-            	return null;
-           
-        }
+		
+		try {
+			switch (cell.getCellType()) 
+	        {
+	            case Cell.CELL_TYPE_NUMERIC:
+	                double1 = cell.getNumericCellValue();
+	                i = double1.intValue();
+	                return i.toString();
+	            case Cell.CELL_TYPE_STRING:
+	                return cell.getStringCellValue();
+	            default:
+	            	return null;
+	           
+	        }
+		} catch (Exception e) {
+			// TODO: handle exception
+			return null;
+		}
+		
 	}
 	
 	String getParserColumn(String symbol){
@@ -59,51 +78,53 @@ public class GeneralizeedParser {
 			case "id":
 				return "B";
 			case "=":
-				return "C";
-			case "if":
-				return "D";
-			case "(":
-				return "E";
-			case ")":
-				return "F";
-			case "{":
-				return "G";
-			case "-":
-				return "H";
-			case "}":
-				return "I";
-			case "+":
 				return "J";
+			case "if":
+				return "C";
+			case "(":
+				return "D";
+			case ")":
+				return "E";
+			case "{":
+				return "F";
+			case "-":
+				return "I";
+			case "}":
+				return "G";
+			case "+":
+				return "H";
 			case ";":
-				return "K";
-			case "*":
-				return "L";
-			case "$":
 				return "M";
+			case "*":
+				return "K";
+			case "$":
+				return "P";
 			case "/":
-				return "N";
+				return "L";
 			case "relop":
+				return "N";
+			case "num":
 				return "O";
 			case "S":
-				return "P";
-			case "A":
 				return "Q";
-			case "I":
+			case "A":
 				return "R";
-			case "E":
+			case "I":
 				return "S";
-			case "T":
+			case "E":
 				return "T";
-			case "F":
+			case "T":
 				return "U";
-			case "C":
+			case "F":
 				return "V";
+			case "C":
+				return "W";
 			default:
 				return null;
 		}
 	}
 	
-	void parseString() throws IOException{
+	/*void parseString() throws IOException{
 		int i;
 		String line = "";
 		boolean read = true;
@@ -123,7 +144,12 @@ public class GeneralizeedParser {
 			currentState = currentState + 2;
 			referenceString = getParserColumn(symbol) +  currentState.toString();
 			currentState = currentState - 2;
-			operation = accessParseTable(referenceString);
+			operation = accessParseTable(referenceString);			
+			if(operation == null){
+				System.out.println("String not accepted");
+				break;
+			}
+				
 			if(operation.charAt(0) == 'S'){
 				//state = state in parseTable and Read the next character in string
 				state = (String) operation.substring(1);
@@ -158,6 +184,73 @@ public class GeneralizeedParser {
 			}
 			System.out.println(stack);
 		}
+		
+	}*/
+	
+	public int updateStack(){
+		int i;
+		String line = "";
+		boolean read = true;
+		//stack.add("0");
+		//stack.add("S");
+		Integer currentState,tempCol;
+		String state,symbol,referenceString;
+		String operation;
+		String[] production,temp;
+		currentState = Integer.parseInt(stack.get(stack.size() - 1));
+		/*if(read)
+			line = bReader.readLine();
+		*/
+		line = LexCommunicator.get(0);				
+		symbol = getSymbol(line);
+		
+		currentState = currentState + 2;
+		referenceString = getParserColumn(symbol) +  currentState.toString();
+		currentState = currentState - 2;
+		operation = accessParseTable(referenceString);
+		
+		if(operation == null){
+			System.out.println("String not accepted");
+			return 0;
+		}
+			
+		if(operation.charAt(0) == 'S'){
+			//state = state in parseTable and Read the next character in string
+			state = (String) operation.substring(1);
+			read = true;
+			//Push it on stack
+			pushOnStack(symbol);
+			pushOnStack(state);
+			LexCommunicator.remove(0);
+		}
+		
+		else if(operation.charAt(0) == 'R') {
+			//Pop of twice the number of character in parseTable[state][symbol]
+			production = returnProductionRule(operation).split("->|~");
+			temp = production[1].split(" ");
+			popFromStack(2 * temp.length);
+			//Substitute with symbol on the left of Production in parseTable[state][symbol]
+			pushOnStack(production[0]);
+			//Calculate the next State
+			//state = getNextState();
+			tempCol = Integer.parseInt(stack.get(stack.size() - 2)) + 2;
+			referenceString = getParserColumn(stack.get(stack.size() - 1)) +  tempCol.toString();
+			state = accessParseTable(referenceString);
+			pushOnStack(state);
+			read = false;
+		}
+		else if (operation.equals("accept")) {
+			System.out.println("String accepted");
+			return 0;
+		}
+		else {
+			System.out.println(stack);
+			System.out.println("String not accepted");
+			return 0;
+		}
+		System.out.println(stack);
+		return 1;
+	
 	}
 	
 	String getSymbol(String line){
@@ -166,6 +259,9 @@ public class GeneralizeedParser {
 			symbol = "id";
 		else if (line.split(":")[0].equals("Relational Operator")) {
 			symbol = "relop";
+		}
+		else if (line.split(":")[0].equals("Integer")) {
+			symbol = "num";
 		}
 		else if (line.equals(";") || line.equals("$")) {
 			symbol = line;
@@ -179,51 +275,53 @@ public class GeneralizeedParser {
 	static String returnProductionRule(String reduce){
 		switch (reduce) {
 		case "R1":
-		reduce="S->A S";
+		reduce = "S->A S";
 		break;
 		case "R2":
-		reduce="S->I S";
+		reduce = "S->I S";
 		break;
 		case "R3":
-		reduce="S->A";
+		reduce = "S->A";
 		break;
 		case "R4":
-		reduce="S->I";
+		reduce = "S->I";
 		break;
 		case "R5":
-		reduce="A->id = E ;";
+		reduce = "A->id = E ;";
 		break;
 		case "R6":
-		reduce="I->if ( C ) { S }";
+		reduce = "I->if ( C ) { S }";
 		break;
 		case "R7":
-		reduce="C->id relop id";
+		reduce = "C->id relop id";
 		break;
 		case "R8":
-		reduce="E->E + T";
+		reduce = "E->E + T~+";
 		break;
 		case "R9":
-		reduce="E->E - T";
+		reduce = "E->E - T~-";
 		break;
 		case "R10":
-		reduce="E->T";
+		reduce = "E->T";
 		break;
 		case "R11":
-		reduce="T->T * F";
+		reduce = "T->T * F~*";
 		break;
 		case "R12":
-		reduce="T->T / F";
+		reduce = "T->T / F~/";
 		break;
 		case "R13":
-		reduce="T->F";
+		reduce = "T->F~assign";
 		break;
 		case "R14":
-		reduce="F->( E )";
+		reduce = "F->( E )";
 		break;
 		case "R15":
-		reduce="F->id";
+		reduce = "F->id";
 		break;
-
+		case "R16":
+			reduce = "F->num~assign";
+			break;
 		default:
 		break;
 		}
@@ -241,10 +339,10 @@ public class GeneralizeedParser {
 		}
 	}
 	
-	public static void main(String[] args) throws IOException {
+	/*public static void main(String[] args) throws IOException {
 		GeneralizeedParser gp = new GeneralizeedParser();
 		gp.openInputLexFile();
 		gp.accessParseTableFile();
 		gp.parseString();
-	}
+	}*/
 }

@@ -1,3 +1,27 @@
+Identifier:d
+Assignment Operator:=
+Integer:10
+delimiter:;
+Keyword:if
+Opening Bracket:(
+Identifier:a
+Relational Operator:>
+Identifier:y
+Closing Bracket:)
+Opening Bracket:{
+Identifier:g
+Assignment Operator:=
+Identifier:h
+Arithmetic Operator:+
+Identifier:i
+delimiter:;
+Closing Bracket:}
+Identifier:d
+Assignment Operator:=
+Identifier:b
+Arithmetic Operator:+
+Identifier:m
+delimiter:;
 Keyword:if
 Opening Bracket:(
 Identifier:a
@@ -10,6 +34,38 @@ Assignment Operator:=
 Identifier:b
 Arithmetic Operator:+
 Identifier:c
-;
+delimiter:;
+Identifier:c
+Assignment Operator:=
+Identifier:k
+Arithmetic Operator:-
+Identifier:l
+Arithmetic Operator:/
+Identifier:c
+delimiter:;
+Keyword:if
+Opening Bracket:(
+Identifier:a
+Relational Operator:>
+Identifier:y
+Closing Bracket:)
+Opening Bracket:{
+Identifier:g
+Assignment Operator:=
+Identifier:h
+Arithmetic Operator:+
+Identifier:i
+delimiter:;
+Identifier:c
+Assignment Operator:=
+Opening Bracket:(
+Identifier:k
+Arithmetic Operator:*
+Identifier:l
+Closing Bracket:)
+Arithmetic Operator:/
+Identifier:c
+delimiter:;
 Closing Bracket:}
-$
+Closing Bracket:}
+End:$

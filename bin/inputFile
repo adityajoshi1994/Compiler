@@ -1,4 +1,16 @@
+d = 10;
+if(a > y)
+{
+	g = h + i;
+}
+d = b + m;
 if(a < b)
 {
 	a = b + c;
+	c = k - l / c;
+	if(a > y)
+	{
+		g = h + i;
+		c = ( k * l ) / c;
+	}
 }
